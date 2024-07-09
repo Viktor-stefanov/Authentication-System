@@ -1,5 +1,5 @@
 import express from "express";
-import { signUpSchema, validateSignUp } from "../schemas/auth.js";
+import { validateSignUp } from "../schemas/auth.js";
 import { createUser } from "../db/index.js";
 
 const router = express.Router();
@@ -7,7 +7,7 @@ const router = express.Router();
 router.post("/signUp", async (req, res) => {
   const { name, email, password, confirmPassword, signUpMethod } = req.body;
   if (!name || !email || !password)
-    res.status(400).json({ message: "All fields are required" });
+    return res.status(400).json({ message: "All fields are required" });
 
   const zodErrors = validateSignUp({
     name,
@@ -17,7 +17,7 @@ router.post("/signUp", async (req, res) => {
     signUpMethod,
   });
 
-  if (zodErrors.length > 0) res.status(400).json({ errors: zodErrors });
+  if (zodErrors.length > 0) return res.status(400).json({ errors: zodErrors });
 
   const result = await createUser({
     name,
@@ -26,9 +26,9 @@ router.post("/signUp", async (req, res) => {
     signUpMethod,
   });
 
-  if (result.errors) res.status(400).json(result.errors);
+  if (result.errors) return res.status(400).json(result.errors);
 
-  res.status(200).json({ success: true });
+  setTimeout(() => res.status(200).json({ success: true }), 3000);
 });
 
 router.post("/login", (req, res) => {
