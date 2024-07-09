@@ -13,6 +13,16 @@ const signUpSchema = z
     path: ["confirmPassword"],
   });
 
-type SignUpSchema = z.infer<typeof signUpSchema>;
+type SignUpSchema = {
+  signUpMethod: string;
+} & z.infer<typeof signUpSchema>;
 
-export { signUpSchema, type SignUpSchema };
+type SignUpResponse = {
+  success?: boolean;
+  errors?: {
+    name: string;
+    message: string;
+  };
+};
+
+export { signUpSchema, type SignUpSchema, type SignUpResponse };
