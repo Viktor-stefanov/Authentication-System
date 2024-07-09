@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { signUpSchema, type SignUpSchema } from "../schema/signUpSchema";
 
-export default function Register() {
+export default function SignUp() {
   const {
     register,
     handleSubmit,
