@@ -11,6 +11,7 @@
   "author": "Viktor Stefanov",
   "license": "ISC",
   "dependencies": {
+    "@types/jsonwebtoken": "^9.0.6",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "date-fns": "^3.6.0",

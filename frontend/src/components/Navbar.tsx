@@ -47,7 +47,7 @@ export default function Navbar() {
               <ul className="flex space-x-4">
                 <li>
                   <Link
-                    to="/login"
+                    to="/signIn"
                     className="text-gray-200 hover:text-white text-xl"
                   >
                     Login
@@ -55,7 +55,7 @@ export default function Navbar() {
                 </li>
                 <li>
                   <Link
-                    to="/register"
+                    to="/signUp"
                     className="text-gray-200 hover:text-white text-xl"
                   >
                     Register
@@ -70,15 +70,12 @@ export default function Navbar() {
             <div className="md:hidden mt-2">
               <ul className="flex flex-col space-y-2">
                 <li>
-                  <Link to="/login" className="text-gray-200 hover:text-white">
+                  <Link to="/signIn" className="text-gray-200 hover:text-white">
                     Login
                   </Link>
                 </li>
                 <li>
-                  <Link
-                    to="/register"
-                    className="text-gray-200 hover:text-white"
-                  >
+                  <Link to="/signUp" className="text-gray-200 hover:text-white">
                     Register
                   </Link>
                 </li>
