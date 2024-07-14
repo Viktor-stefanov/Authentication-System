@@ -15,14 +15,14 @@ const signUpSchema = z
 
 type SignUpSchema = {
   signUpMethod: string;
+  role: "user" | "admin";
 } & z.infer<typeof signUpSchema>;
 
 type SignUpResponse = {
-  success?: boolean;
+  token: string;
   errors?: {
-    name: string;
-    message: string;
-  };
+    error: string;
+  }[];
 };
 
 export { signUpSchema, type SignUpSchema, type SignUpResponse };

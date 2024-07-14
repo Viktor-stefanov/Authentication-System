@@ -15,12 +15,13 @@ export const signUpSchema = z
   });
 
 export type SignUpSchema = z.infer<typeof signUpSchema>;
+export type HttpUserData = Omit<SignUpSchema, "confirmPassword">;
 
 export const validateSignUp = (data: SignUpSchema) => {
   const result = signUpSchema.safeParse(data);
   if (!result.success) {
     return result.error.issues.map((issue) => {
-      return { field: issue.path[0], message: issue.message };
+      return { [issue.path[0]]: issue.message };
     });
   }
   return [];

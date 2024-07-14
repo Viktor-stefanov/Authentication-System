@@ -1,23 +1,22 @@
-import { SignUpSchema } from "../schemas/auth.js";
-import { User } from "../schemas/db_user.js";
-import { format } from "date-fns";
 import pool from "./index.js";
-import { createJwt, hashPassword, verifyJwt } from "../utils/auth.js";
+import { HttpUserData } from "../schemas/auth.js";
 import { ResultSetHeader } from "mysql2";
 import { NextFunction, Request, Response } from "express";
+import { DbUser } from "../schemas/db_user.js";
+import { format } from "date-fns";
+import { createAccessToken, hashPassword, verifyJwt } from "../utils/auth.js";
 
-export const signUpUser = async (
-  user: Omit<SignUpSchema, "confirmPassword">
-) => {
-  const [userWithEmail] = await pool.query<User[]>(
-    "SELECT * FROM users WHERE email = ?",
-    [user.email]
-  );
-  if (userWithEmail.length > 0) return { email: "Email already exists" };
-
-  const [firstName, lastName] = user.name.split(" ");
-  const hashedPassword = hashPassword(user.password);
+export const signUpUser = async (user: HttpUserData) => {
   try {
+    const [userWithEmail] = await pool.query<DbUser[]>(
+      "SELECT * FROM users WHERE email = ?",
+      [user.email]
+    );
+    if (userWithEmail.length > 0)
+      return { errors: [{ email: "Email already exists" }] };
+
+    const [firstName, lastName] = user.name.split(" ");
+    const hashedPassword = hashPassword(user.password);
     const [res] = await pool.execute<ResultSetHeader>(
       "INSERT INTO users (firstName, lastName, email, password, role, signUpMethod, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)",
       [
@@ -30,31 +29,42 @@ export const signUpUser = async (
         format(new Date(), "yyyy-MM-dd HH:mm:ss"),
       ]
     );
+    console.log("before create access token", user);
+    const token = createAccessToken(user);
+    console.log("after create access token", token);
 
-    const token = createJwt(res.insertId.toString());
-
-    return { token };
+    return { ...user, token };
   } catch (error) {
-    return { error: "A user with this email already already exists" };
+    // TODO: add logging
+    return { errors: [{ error: "Something went wrong..." }] };
   }
 };
 
 export const signInUser = async (email: string, pwd: string) => {
-  const [usersWithEmail] = await pool.query<User[]>(
-    "SELECT * FROM users WHERE email = ?",
-    [email]
-  );
-  if (usersWithEmail.length !== 0)
-    return { email: "A user with this email does not exist" };
+  try {
+    const [usersWithEmail] = await pool.query<DbUser[]>(
+      "SELECT * FROM users WHERE email = ?",
+      [email]
+    );
+    if (usersWithEmail.length !== 0)
+      return { errors: [{ error: "Incorrect credentials" }] };
 
-  const hashedPwd = hashPassword(pwd);
-  const [user] = await pool.query<User[]>(
-    "SELECT * FROM users WHERE email = ? AND password = ?",
-    [email, hashedPwd]
-  );
-  if (user.length === 0) return { email: "Incorrect email or password" };
+    const hashedPwd = hashPassword(pwd);
+    const [user] = await pool.query<DbUser[]>(
+      "SELECT * FROM users WHERE email = ? AND password = ?",
+      [email, hashedPwd]
+    );
+    if (user.length === 0) return { error: "Incorrect credentials" };
+    if (user.length > 1) return { error: "wtf" }; // :D
+    const token = createAccessToken({
+      ...user[0],
+      name: user[0].firstName + " " + user[0].lastName,
+    });
 
-  return { success: true };
+    return { ...user, token };
+  } catch (error) {
+    return { errors: [{ error: "Something went wrong" }] };
+  }
 };
 
 export const authenticateUser = (
@@ -63,16 +73,15 @@ export const authenticateUser = (
   next: NextFunction
 ) => {
   try {
-    if (req.headers.authorization) {
-      const token = req.headers.authorization.split(" ")[1];
-      const decoded = verifyJwt(token);
+    console.log(req.cookies);
+    if (req.cookies.accessToken) {
+      req.body.user = verifyJwt(req.cookies.accessToken);
       next();
     } else {
-      return { error: "No jwt provided" };
+      return res.status(400).json({ error: "No jwt provided" });
     }
   } catch (error) {
-    return {
-      error: "Invalid jwt provided",
-    };
+    console.log(error);
+    return res.status(400).json(error);
   }
 };

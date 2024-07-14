@@ -20,14 +20,17 @@ export default function SignUp() {
 
   const onSubmit = async (userData: SignUpSchema) => {
     mutate(
-      { ...userData, signUpMethod: "email" },
+      { ...userData, signUpMethod: "email", role: "user" },
       {
         onError: (error) => {
           if (error.response && error.response.data)
             setError(error.response.data);
           setTimeout(() => setError(null), 3000);
         },
-        onSuccess: () => navigate("/"),
+        onSuccess: (result) => {
+          if (result) localStorage.setItem("user", result.token);
+          navigate("/");
+        },
       }
     );
   };

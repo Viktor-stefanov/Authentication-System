@@ -7,12 +7,9 @@ const signInSchema = z.object({
 
 type SignInSchema = z.infer<typeof signInSchema>;
 
+// this should be reworked to take in a user object with the appropriate properties
 type SignInResponse = {
   success?: boolean;
-  errors?: {
-    name: string;
-    message: string;
-  };
 };
 
 export { signInSchema, type SignInResponse, type SignInSchema };
