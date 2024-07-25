@@ -1,29 +1,28 @@
-import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import { HttpUserData } from "../schemas/auth";
+import { User } from "../types/auth.js";
 dotenv.config();
 
-const { TokenExpiredError, JsonWebTokenError } = jwt;
+const { JsonWebTokenError } = jwt;
 
-type tokenPayload = { user?: HttpUserData; error?: string };
+export const createToken = (
+  payload: object | string,
+  options: { expiresIn: string }
+): string => {
+  return jwt.sign(payload, process.env.JWT_SECRET!, options);
+};
 
-export const hashPassword = (password: string) =>
-  crypto.createHash("sha512").update(password).digest("hex");
-
-export const createAccessToken = (user: HttpUserData) =>
-  jwt.sign(user, process.env.JWT_SECRET!, { expiresIn: "60ms" });
-
-export const createRefreshToken = (user: HttpUserData) =>
-  jwt.sign(user, process.env.JWT_SECRET!, { expiresIn: "1d" });
-
-export const verifyJwt = (token: string): tokenPayload => {
+export const verifyJwt = (token: string): User => {
   try {
-    return jwt.verify(token, process.env.JWT_SECRET!) as { user: HttpUserData };
-  } catch (err) {
-    if (err instanceof TokenExpiredError) return { error: "Token has expired" };
-    else if (err instanceof JsonWebTokenError)
-      return { error: "Malformed token" };
-    else return { error: "Failed to authenticate user" };
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!);
+    return decoded as User;
+  } catch (error) {
+    if (
+      error instanceof JsonWebTokenError &&
+      error.name === "TokenExpiredError"
+    ) {
+      throw new Error("Token expired");
+    }
+    throw new Error("Invalid token");
   }
 };

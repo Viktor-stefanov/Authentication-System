@@ -1,16 +1,16 @@
 {
   "compilerOptions": {
-    "module": "ESNext",
-    "target": "ES2020",
-    "lib": ["ES2022"],
-    "outDir": "./dist",
+    "target": "es6",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "moduleResolution": "Node",
     "forceConsistentCasingInFileNames": true,
-    "noEmit": true
+    "typeRoots": ["./node_modules/@types", "./src/types"],
+    "outDir": "./dist",
+    "rootDir": "./src"
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": ["src/**/*"],
+  "exlude": ["node_modules"]
 }
