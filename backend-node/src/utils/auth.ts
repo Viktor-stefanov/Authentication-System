@@ -1,22 +1,22 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import { User } from "../types/auth.js";
 dotenv.config();
 
 const { JsonWebTokenError } = jwt;
 
-export const createToken = (
+export const createJwt = (
   payload: object | string,
   options: { expiresIn: string }
 ): string => {
   return jwt.sign(payload, process.env.JWT_SECRET!, options);
 };
 
-export const verifyJwt = (token: string): User => {
+export const verifyJwt = (token: string): { id: number } => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!);
-    return decoded as User;
+    return decoded as { id: number };
   } catch (error) {
+    console.log(error);
     if (
       error instanceof JsonWebTokenError &&
       error.name === "TokenExpiredError"

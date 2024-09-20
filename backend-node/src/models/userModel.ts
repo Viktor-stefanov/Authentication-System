@@ -1,21 +1,18 @@
-import pool from "../db/index.js";
-import { User } from "../types/auth.js";
+import db from "../db/index.js";
+import { usersTable } from "../db/schema/user.js";
+import { query } from "../utils/db.js";
 
-export const createUser = async (user: User): Promise<void> => {
-  const { name, email, password, role } = user;
-  try {
-    await pool.query(
-      "INSERT INTO users (name, email, password, role, createdAt) VALUES (?, ?, ?, ?, NOW())",
-      [name, email, password, role]
-    );
-  } catch (error) {
-    if (
-      error instanceof Error &&
-      "code" in error &&
-      error.code === "ER_DUP_ENTRY"
-    ) {
-      throw new Error("Email already exists");
-    }
-    throw error;
+export const createUser = async (user: typeof usersTable.$inferInsert) => {
+  const { data, error } = await query(
+    db.insert(usersTable).values(user).returning()
+  );
+  if (
+    error?.code === "23505" && // UNIQUE CONSTRAINT
+    error?.message ===
+      'duplicate key value violates unique constraint "users_email_key"'
+  ) {
+    throw new Error("User with this email already exists.");
   }
+
+  return data?.at(0)?.id;
 };
